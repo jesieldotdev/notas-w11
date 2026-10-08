@@ -145,6 +145,12 @@ class Notes(QObject):
     def showList(self):
         self.listRequested.emit()
 
+    @Slot(QObject, float)
+    def blurBehind(self, window, radius):
+        """Vidro dos painéis do Plasma: desfoque do KWin atrás da janela (cantos arredondados)."""
+        from . import effects
+        effects.blur_behind(window, radius)
+
     # ── edições (vão para a linha de execução do Keep) ─────────────────────
     @Slot(str, bool)
     def newNote(self, color="", isList=False):

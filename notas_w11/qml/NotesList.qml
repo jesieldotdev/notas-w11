@@ -19,15 +19,23 @@ Window {
     minimumWidth: 300
     minimumHeight: 380
     title: "Notas Autoadesivas"
-    color: "#202020"
+    // vidro dos painéis do Plasma: sem moldura, fundo translúcido e o desfoque do KWin atrás
+    flags: Qt.Window | Qt.FramelessWindowHint
+    color: "transparent"
 
     readonly property bool needsLogin: notas.status === "login"
     property string filter: ""
 
-    // camadas do Fluent (escuro)
-    readonly property color layer: "#2b2b2b"
-    readonly property color layerHover: "#323232"
+    // camadas translúcidas por cima do vidro, como nos painéis
+    readonly property color layer: Qt.rgba(1, 1, 1, 0.055)
+    readonly property color layerHover: Qt.rgba(1, 1, 1, 0.09)
     readonly property color stroke: Qt.rgba(1, 1, 1, 0.07)
+
+    function updateBlur() { if (visible) notas.blurBehind(list, 8); }
+    onVisibleChanged: updateBlur()
+    onWidthChanged: blurTimer.restart()
+    onHeightChanged: blurTimer.restart()
+    Timer { id: blurTimer; interval: 30; onTriggered: list.updateBlur() }
     readonly property color textSecondary: Qt.rgba(1, 1, 1, 0.62)
 
     function showAndRaise() {
@@ -43,11 +51,51 @@ Window {
         NumberAnimation { target: shift; property: "y"; from: 18; to: 0; duration: 260; easing.type: Easing.OutCubic }
     }
 
+    // ── o vidro ────────────────────────────────────────────────────────────
+    Rectangle {
+        id: glass
+        anchors.fill: parent
+        radius: 8
+        color: Qt.rgba(0.11, 0.11, 0.12, 0.74)
+        border.width: 1
+        border.color: Qt.rgba(1, 1, 1, 0.09)
+    }
+
+    // arrastar pelo topo; bordas para redimensionar
+    MouseArea {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 56
+        onPressed: list.startSystemMove()
+        onDoubleClicked: list.visibility === Window.Maximized ? list.showNormal() : list.showMaximized()
+    }
+    Repeater {
+        model: [
+            { e: Qt.LeftEdge, x: 0, y: 8, w: 5, h: -16, c: Qt.SizeHorCursor },
+            { e: Qt.RightEdge, x: -5, y: 8, w: 5, h: -16, c: Qt.SizeHorCursor },
+            { e: Qt.TopEdge, x: 8, y: 0, w: -16, h: 4, c: Qt.SizeVerCursor },
+            { e: Qt.BottomEdge, x: 8, y: -5, w: -16, h: 5, c: Qt.SizeVerCursor },
+            { e: Qt.BottomEdge | Qt.RightEdge, x: -10, y: -10, w: 10, h: 10, c: Qt.SizeFDiagCursor },
+            { e: Qt.BottomEdge | Qt.LeftEdge, x: 0, y: -10, w: 10, h: 10, c: Qt.SizeBDiagCursor }
+        ]
+        delegate: MouseArea {
+            required property var modelData
+            z: 10
+            x: modelData.x < 0 ? list.width + modelData.x : modelData.x
+            y: modelData.y < 0 ? list.height + modelData.y : modelData.y
+            width: modelData.w <= 0 ? list.width + modelData.w : modelData.w
+            height: modelData.h <= 0 ? list.height + modelData.h : modelData.h
+            cursorShape: modelData.c
+            onPressed: list.startSystemResize(modelData.e)
+        }
+    }
+
     ColumnLayout {
         id: content
         anchors.fill: parent
         anchors.margins: 16
-        anchors.topMargin: 14
+        anchors.topMargin: 10
         spacing: 12
         transform: Translate { id: shift }
 
@@ -57,7 +105,7 @@ Window {
             spacing: 2
             Label {
                 text: "Notas Autoadesivas"
-                font.pointSize: 16
+                font.pointSize: 13
                 font.weight: Font.DemiBold
                 color: "white"
                 Layout.fillWidth: true
@@ -71,6 +119,9 @@ Window {
                 spinning: notas.status === "syncing"
                 onClicked: notas.syncNow()
             }
+            Rectangle { Layout.preferredWidth: 1; Layout.preferredHeight: 18; Layout.leftMargin: 4; Layout.rightMargin: 4; color: list.stroke }
+            IconButton { iconName: "window-minimize"; tip: "Minimizar"; small: true; onClicked: list.showMinimized() }
+            IconButton { iconName: "window-close"; tip: "Fechar"; small: true; closeStyle: true; onClicked: list.visible = false }
         }
 
         // ── pesquisa ───────────────────────────────────────────────────────
@@ -79,7 +130,7 @@ Window {
             Layout.fillWidth: true
             implicitHeight: 34
             radius: 6
-            color: search.activeFocus ? "#1c1c1c" : (searchHover.hovered ? "#323232" : list.layer)
+            color: search.activeFocus ? Qt.rgba(0, 0, 0, 0.3) : (searchHover.hovered ? list.layerHover : list.layer)
             border.width: 1
             border.color: list.stroke
             Behavior on color { ColorAnimation { duration: 120 } }
@@ -328,6 +379,7 @@ Window {
         property string tip
         property bool small: false
         property bool spinning: false
+        property bool closeStyle: false
         implicitWidth: small ? 28 : 34
         implicitHeight: small ? 28 : 34
         hoverEnabled: true
@@ -346,7 +398,8 @@ Window {
         }
         background: Rectangle {
             radius: 5
-            color: Qt.rgba(1, 1, 1, ib.down ? 0.04 : (ib.hovered ? 0.08 : 0))
+            color: ib.closeStyle && ib.hovered ? (ib.down ? "#b52a1d" : "#c42b1c")
+                   : Qt.rgba(1, 1, 1, ib.down ? 0.04 : (ib.hovered ? 0.08 : 0))
             Behavior on color { ColorAnimation { duration: 100 } }
         }
         ToolTip.text: tip
