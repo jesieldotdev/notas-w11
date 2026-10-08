@@ -83,7 +83,7 @@ Window {
         id: card
         anchors.fill: parent
         radius: 8
-        color: win.tinted(Palette.body(win.colorKey), 0.78)
+        color: win.tinted(Palette.body(win.colorKey), 0.55)
         border.width: 1
         border.color: Qt.rgba(1, 1, 1, 0.1)
         clip: true
@@ -115,7 +115,7 @@ Window {
             id: bar
             width: parent.width
             height: win.expandedBar ? 34 : 6
-            color: win.tinted(Palette.bar(win.colorKey), 0.88)
+            color: win.tinted(Palette.bar(win.colorKey), 0.78)
             Behavior on height { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
             Behavior on color { ColorAnimation { duration: 200 } }
 
@@ -284,7 +284,7 @@ Window {
             width: parent.width
             y: bar.height - (shown ? 0 : height)
             height: menuColumn.implicitHeight + 16
-            color: win.tinted(Qt.darker(Palette.body(win.colorKey), 1.3), 0.92)
+            color: win.tinted(Qt.darker(Palette.body(win.colorKey), 1.3), 0.85)
             opacity: shown ? 1 : 0
             visible: opacity > 0
             z: 5
