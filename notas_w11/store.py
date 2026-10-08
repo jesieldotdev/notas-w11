@@ -164,13 +164,22 @@ class KeepWorker(QObject):
         self.notesReady.emit(notes)
 
     # ── edições ────────────────────────────────────────────────────────────
-    @Slot(str, bool)
-    def create(self, color, isList):
-        n = self.keep.createList("", []) if isList else self.keep.createNote("", "")
+    @Slot(str, bool, str, bool)
+    def create(self, color, isList, text, openWindow):
+        n = self.keep.createList("", []) if isList else self.keep.createNote("", text or "")
         if color in COLORS:
             n.color = node.ColorValue(color)
         self._changed()
-        self.created.emit(n.id)
+        if openWindow:
+            self.created.emit(n.id)
+
+    @Slot(str, str)
+    def setText(self, noteId, text):
+        """Só o texto (o título fica como está): edição rápida pelo painel do relógio."""
+        n = self._note(noteId)
+        if n and not isinstance(n, node.List) and n.text != text:
+            n.text = text
+            self._changed()
 
     def _note(self, noteId):
         n = self.keep.get(noteId)

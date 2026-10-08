@@ -34,7 +34,8 @@ class Notes(QObject):
     listRequested = Signal()
     loginRequested = Signal()
     # pedidos para a linha de execução do Keep
-    _create = Signal(str, bool)
+    _create = Signal(str, bool, str, bool)
+    _setText = Signal(str, str)
     _update = Signal(str, str, str)
     _setColor = Signal(str, str)
     _setPinned = Signal(str, bool)
@@ -65,6 +66,7 @@ class Notes(QObject):
         self.worker.statusChanged.connect(self._onStatus)
         self.worker.created.connect(self.openNote)
         for sig, slot in ((self._create, self.worker.create), (self._update, self.worker.update),
+                          (self._setText, self.worker.setText),
                           (self._setColor, self.worker.setColor), (self._setPinned, self.worker.setPinned),
                           (self._trash, self.worker.trash), (self._addItem, self.worker.addItem),
                           (self._setItem, self.worker.setItem), (self._removeItem, self.worker.removeItem),
@@ -146,7 +148,15 @@ class Notes(QObject):
     # ── edições (vão para a linha de execução do Keep) ─────────────────────
     @Slot(str, bool)
     def newNote(self, color="", isList=False):
-        self._create.emit(color or "YELLOW", isList)
+        self._create.emit(color or "YELLOW", isList, "", True)
+
+    def addQuickNote(self, text):
+        """Nota rápida (painel do relógio): salva sem abrir janela."""
+        if text.strip():
+            self._create.emit("YELLOW", False, text, False)
+
+    def setText(self, noteId, text):
+        self._setText.emit(noteId, text)
 
     @Slot(str, str, str)
     def update(self, noteId, title, text):
@@ -220,7 +230,23 @@ class Notes(QObject):
         self.thread.wait(3000)
 
 
+def _b64(value):
+    import base64
+    return base64.b64decode(value.encode()).decode("utf-8")
+
+
 def handle_args(notes, args):
+    # vindos do painel do relógio: o texto chega em base64 (acentos, aspas, quebras de linha)
+    if "--add-b64" in args:
+        i = args.index("--add-b64")
+        if i + 1 < len(args):
+            notes.addQuickNote(_b64(args[i + 1]))
+        return
+    if "--set-b64" in args:
+        i = args.index("--set-b64")
+        if i + 2 < len(args):
+            notes.setText(args[i + 1], _b64(args[i + 2]))
+        return
     if "--new" in args:
         notes.newNote("", False)
     elif "--open" in args:
