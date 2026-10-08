@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=Notas Autoadesivas
+GenericName=Notas
+Comment=Notas autoadesivas sincronizadas com o Google Keep
+Exec=@BIN@/notas-w11
+Icon=knotes
+Categories=Utility;Qt;
+Keywords=notas;keep;post-it;lembrete;sticky;
+StartupWMClass=notas-w11
+Actions=nova;
+
+[Desktop Action nova]
+Name=Nova nota
+Exec=@BIN@/notas-w11 --new

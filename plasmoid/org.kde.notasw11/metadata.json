@@ -1,0 +1,14 @@
+{
+    "KPlugin": {
+        "Authors": [ { "Name": "notas-w11" } ],
+        "Category": "Utilities",
+        "Description": "Notas Autoadesivas sincronizadas com o Google Keep",
+        "Icon": "knotes",
+        "Id": "org.kde.notasw11",
+        "License": "GPL-2.0-or-later",
+        "Name": "Notas Autoadesivas",
+        "Version": "1.0"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
