@@ -15,7 +15,7 @@ import sys
 
 from PySide6.QtCore import (QCoreApplication, QObject, QSettings, QThread, QUrl, Qt,
                             Property, Signal, Slot)
-from PySide6.QtGui import QDesktopServices, QIcon
+from PySide6.QtGui import QIcon
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtWidgets import QApplication
@@ -24,7 +24,6 @@ from .store import COLORS, KeepWorker, NotesModel
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SOCKET = f"notas-w11-{os.getuid()}"
-EMBEDDED_SETUP = "https://accounts.google.com/EmbeddedSetup"
 
 
 class Notes(QObject):
@@ -183,22 +182,34 @@ class Notes(QObject):
         self._sync.emit()
 
     # ── conta ──────────────────────────────────────────────────────────────
-    @Slot()
-    def openBrowserLogin(self):
-        """Login pelo navegador padrão: a pessoa copia o cookie oauth_token depois."""
-        QDesktopServices.openUrl(QUrl(EMBEDDED_SETUP))
-
     @Slot(str, str)
     def login(self, email, oauthToken):
         self._login.emit(email.strip(), oauthToken.strip())
 
-    @Slot(str)
-    def embeddedLogin(self, email):
-        """Login numa janela do próprio app: o cookie é pego sozinho."""
+    loginWindowChanged = Signal()
+
+    @Property(bool, notify=loginWindowChanged)
+    def loginWindowOpen(self):
+        return getattr(self, "_embedded", None) is not None
+
+    @Slot()
+    def signIn(self):
+        """"Entrar com o Google": janela com o login do Google, que conecta sozinha ao terminar."""
+        if getattr(self, "_embedded", None):
+            self._embedded.raise_()
+            self._embedded.activateWindow()
+            return
         from .login import EmbeddedLogin
         self._embedded = EmbeddedLogin()
-        self._embedded.tokenFound.connect(lambda token: self.login(email, token))
+        self._embedded.loggedIn.connect(self.login)
+        self._embedded.destroyed.connect(self._loginClosed)
+        self._embedded.setAttribute(Qt.WA_DeleteOnClose)
         self._embedded.show()
+        self.loginWindowChanged.emit()
+
+    def _loginClosed(self):
+        self._embedded = None
+        self.loginWindowChanged.emit()
 
     @Slot()
     def logout(self):

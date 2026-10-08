@@ -77,7 +77,7 @@ class KeepWorker(QObject):
             self.keep.restore(state)      # mostra as notas na hora, mesmo sem internet
             self._publish()
         except (OSError, ValueError):
-            pass
+            self._publish()  # sem cópia local: publica a lista vazia (fecha janelas de notas que não existem)
 
         creds = credentials.load()
         if not creds:

@@ -165,7 +165,7 @@ Window {
 
             // texto
             ScrollView {
-                visible: win.n && !win.n.isList
+                visible: !!win.n && !win.n.isList
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 TextArea {
@@ -192,7 +192,7 @@ Window {
             // lista de tarefas (notas de lista do Keep)
             ListView {
                 id: listView
-                visible: win.n && win.n.isList
+                visible: !!win.n && !!win.n.isList
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true

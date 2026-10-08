@@ -3,7 +3,7 @@
 # a menos que se use --purge.
 set -euo pipefail
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}/notas-w11"
-pkill -f "notas_w11.app" 2>/dev/null || true
+pgrep -f "python[0-9.]* -m notas_w11[.]app" | xargs -r kill 2>/dev/null || true
 kpackagetool6 -t Plasma/Applet -r org.kde.notasw11 >/dev/null 2>&1 || true
 rm -rf "$DATA/app" "$DATA/venv" "$HOME/.local/bin/notas-w11" \
        "$HOME/.local/share/applications/notas-w11.desktop" "$HOME/.config/autostart/notas-w11.desktop"
