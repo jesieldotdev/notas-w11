@@ -65,6 +65,8 @@ Window {
         ScriptAction { script: notas.closeNote(win.noteId) }
     }
     function closeNote() { flush(); closeAnim.start(); }
+    // fechar pelo sistema (Alt+F4…) é o mesmo que o × da nota: anima e tira das abertas
+    onClosing: close => { close.accepted = false; if (!closeAnim.running) win.closeNote(); }
 
     // ── salvar: espera a pessoa parar de digitar ───────────────────────────
     Timer { id: typingTimer; interval: 600; onTriggered: win.flush() }

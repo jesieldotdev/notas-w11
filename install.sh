@@ -54,6 +54,9 @@ sed "s|@BIN@|$BIN|g; s|^Exec=.*|Exec=$BIN/notas-w11 --background|" "$HERE/data/n
     > "$HOME/.config/autostart/notas-w11.desktop"
 kbuildsycoca6 >/dev/null 2>&1 || true
 
+info "Adesivos fora da barra de tarefas (regra do KWin)"
+bash "$HERE/data/kwin-rule.sh" install
+
 info "Widget do Plasma (painel e área de trabalho)"
 if kpackagetool6 -t Plasma/Applet -s org.kde.notasw11 >/dev/null 2>&1; then
     kpackagetool6 -t Plasma/Applet -u "$HERE/plasmoid/org.kde.notasw11" >/dev/null
