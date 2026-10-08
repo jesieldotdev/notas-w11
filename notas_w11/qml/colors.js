@@ -29,6 +29,7 @@ function when(seconds) {
     if (diff < 1) return "agora";
     if (diff < 60) return "há " + Math.floor(diff) + " min";
     if (new Date().toDateString() === d.toDateString())
-        return Qt.formatTime(d, "HH:mm");
-    return Qt.formatDate(d, "d MMM");
+        return Qt.locale().toString(d, Qt.locale().timeFormat(1 /* Locale.ShortFormat */));
+    // no idioma do sistema ("8 de ago."); de outro ano, com o ano
+    return Qt.locale().toString(d, d.getFullYear() === new Date().getFullYear() ? "d MMM" : "d MMM yyyy");
 }
