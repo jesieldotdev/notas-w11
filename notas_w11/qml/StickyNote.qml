@@ -36,11 +36,18 @@ Window {
         }
         openAnim.start();
         requestActivate();
+        blurTimer.restart();
     }
+    // vidro: a cor da nota translúcida por cima do desfoque do KWin
+    function updateBlur() { if (visible) notas.blurBehind(win, 8); }
+    onVisibleChanged: updateBlur()
+    Timer { id: blurTimer; interval: 30; onTriggered: win.updateBlur() }
+    function tinted(c, a) { const k = Qt.lighter(c, 1); return Qt.rgba(k.r, k.g, k.b, a); }
+
     onXChanged: saveTimer.restart()
     onYChanged: saveTimer.restart()
-    onWidthChanged: saveTimer.restart()
-    onHeightChanged: saveTimer.restart()
+    onWidthChanged: { saveTimer.restart(); blurTimer.restart(); }
+    onHeightChanged: { saveTimer.restart(); blurTimer.restart(); }
     Timer { id: saveTimer; interval: 500; onTriggered: notas.saveGeometry(win.noteId, win.x, win.y, win.width, win.height) }
 
     // ── abrir e fechar com animação ────────────────────────────────────────
@@ -76,9 +83,9 @@ Window {
         id: card
         anchors.fill: parent
         radius: 8
-        color: Palette.body(win.colorKey)
+        color: win.tinted(Palette.body(win.colorKey), 0.78)
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.08)
+        border.color: Qt.rgba(1, 1, 1, 0.1)
         clip: true
         Behavior on color { ColorAnimation { duration: 200 } }
 
@@ -108,7 +115,7 @@ Window {
             id: bar
             width: parent.width
             height: win.expandedBar ? 34 : 6
-            color: Palette.bar(win.colorKey)
+            color: win.tinted(Palette.bar(win.colorKey), 0.88)
             Behavior on height { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
             Behavior on color { ColorAnimation { duration: 200 } }
 
@@ -150,7 +157,12 @@ Window {
                 color: "white"
                 placeholderTextColor: Qt.rgba(1, 1, 1, 0.45)
                 background: null
+                // o estilo dos campos tem espaçamento interno: aqui alinha com o texto da nota
                 padding: 0
+                leftPadding: 0
+                rightPadding: 0
+                topPadding: 0
+                bottomPadding: 0
                 text: win.n ? win.n.title : ""
                 onTextEdited: win.edited()
                 Keys.onReturnPressed: body.forceActiveFocus()
@@ -272,7 +284,7 @@ Window {
             width: parent.width
             y: bar.height - (shown ? 0 : height)
             height: menuColumn.implicitHeight + 16
-            color: Qt.darker(Palette.body(win.colorKey), 1.25)
+            color: win.tinted(Qt.darker(Palette.body(win.colorKey), 1.3), 0.92)
             opacity: shown ? 1 : 0
             visible: opacity > 0
             z: 5
